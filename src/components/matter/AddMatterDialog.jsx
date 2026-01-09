@@ -209,14 +209,14 @@ export function AddMatterDialog({ open, onOpenChange }) {
             <div className="space-y-2">
               <Label htmlFor="client_id">Associate with Client</Label>
               <Select
-                value={formData.client_id}
-                onValueChange={(value) => handleChange('client_id', value)}
+                value={formData.client_id || 'none'}
+                onValueChange={(value) => handleChange('client_id', value === 'none' ? '' : value)}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Optional - select a client" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">None</SelectItem>
+                  <SelectItem value="none">None</SelectItem>
                   {clients?.map((client) => (
                     <SelectItem key={client.id} value={client.id}>
                       {client.name}
