@@ -31,6 +31,7 @@ const initialFormState = {
   status_code: '220',
   filing_basis: '1(b)',
   filing_date: new Date().toISOString().split('T')[0],
+  office_action_date: '', // Date office action was mailed (for deadline calculation)
   trademark_class: '',
   goods_services: '',
 }
@@ -62,6 +63,7 @@ export function AddMatterDialog({ open, onOpenChange }) {
         status_code: String(data.statusCodeNumeric || 220),
         filing_basis: mapUsptoFilingBasis(data.filingBasis) || prev.filing_basis,
         filing_date: formatDate(data.filingDate) || prev.filing_date,
+        office_action_date: formatDate(data.statusDate) || '', // Date office action was mailed
         trademark_class: data.trademarkClass || '',
         goods_services: data.goodsServices || '',
       }))

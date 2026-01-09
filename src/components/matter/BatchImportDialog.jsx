@@ -59,6 +59,7 @@ export function BatchImportDialog({ open, onOpenChange }) {
             status_code: data.statusCodeNumeric || 220,
             filing_basis: data.filingBasis || '1(b)',
             filing_date: data.filingDate || new Date().toISOString().split('T')[0],
+            office_action_date: data.statusDate || '', // Date office action was mailed
             trademark_class: data.trademarkClass || '',
             goods_services: data.goodsServices || '',
           },

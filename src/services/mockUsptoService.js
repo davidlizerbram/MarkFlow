@@ -502,6 +502,7 @@ export const mockUsptoService = {
           status_code: matterData.status_code || 200,
           filing_date: matterData.filing_date || formatDate(today),
           reg_date: matterData.reg_date || null,
+          office_action_date: matterData.office_action_date || null, // Date office action was mailed
           filing_basis: matterData.filing_basis || '1(b)',
           image_url: null,
           goods_services: matterData.goods_services || '',

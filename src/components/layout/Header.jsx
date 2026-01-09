@@ -75,10 +75,15 @@ export function Header({ onMenuClick }) {
             </TooltipContent>
           </Tooltip>
 
-          {/* Notifications */}
+          {/* Notifications - links to deadlines */}
           <Tooltip>
             <TooltipTrigger asChild>
-              <Button variant="ghost" size="icon" className="relative">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="relative"
+                onClick={() => navigate('/deadlines')}
+              >
                 <Bell className="h-5 w-5" />
                 <span className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-destructive text-[10px] font-medium text-destructive-foreground flex items-center justify-center">
                   3
@@ -87,16 +92,22 @@ export function Header({ onMenuClick }) {
               </Button>
             </TooltipTrigger>
             <TooltipContent>
-              <p>3 urgent deadlines</p>
+              <p>View deadlines</p>
             </TooltipContent>
           </Tooltip>
         </TooltipProvider>
 
-        {/* User avatar */}
-        <Avatar className="h-8 w-8">
-          <AvatarImage src="" alt="User" />
-          <AvatarFallback>JD</AvatarFallback>
-        </Avatar>
+        {/* User avatar - links to settings */}
+        <Button
+          variant="ghost"
+          className="h-8 w-8 rounded-full p-0"
+          onClick={() => navigate('/settings')}
+        >
+          <Avatar className="h-8 w-8">
+            <AvatarImage src="" alt="User" />
+            <AvatarFallback>JD</AvatarFallback>
+          </Avatar>
+        </Button>
       </div>
     </header>
   )

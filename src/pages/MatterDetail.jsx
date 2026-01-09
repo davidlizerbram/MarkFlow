@@ -75,9 +75,10 @@ export function MatterDetail() {
     : null
 
   // Calculate office action deadline if status indicates one is pending
+  // Use office_action_date (date OA was mailed) if available, otherwise can't calculate
   const isOfficeActionPending = [600, 601, 602, 603, 610, 611, 612, 614, 615, 616].includes(matter.status_code)
-  const officeActionDeadline = isOfficeActionPending && matter.filing_date
-    ? calculateOfficeActionDeadline(matter.filing_date, matter.filing_basis)
+  const officeActionDeadline = isOfficeActionPending && matter.office_action_date
+    ? calculateOfficeActionDeadline(matter.office_action_date, matter.filing_basis)
     : null
 
   return (
@@ -261,8 +262,16 @@ export function MatterDetail() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              {matter.deadlines?.length === 0 && !officeActionDeadline ? (
+              {matter.deadlines?.length === 0 && !officeActionDeadline && !isOfficeActionPending ? (
                 <p className="text-muted-foreground">No active deadlines</p>
+              ) : matter.deadlines?.length === 0 && !officeActionDeadline && isOfficeActionPending ? (
+                <div className="rounded-md bg-amber-50 border border-amber-200 p-4">
+                  <p className="font-medium text-amber-800">Office Action Pending</p>
+                  <p className="text-sm text-amber-700 mt-1">
+                    This mark has an office action status but the mailing date is not available.
+                    Re-import this mark from USPTO to fetch the correct deadline date.
+                  </p>
+                </div>
               ) : (
                 <div className="space-y-4">
                   {/* Calculated Office Action deadline */}
