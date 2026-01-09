@@ -129,3 +129,34 @@ export function useSearchMatters(query) {
     staleTime: 30 * 1000, // 30 seconds
   })
 }
+
+/**
+ * Create matter mutation
+ */
+export function useCreateMatter() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (matterData) => mockUsptoService.createMatter(matterData),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.matters })
+      queryClient.invalidateQueries({ queryKey: queryKeys.kpiSummary })
+    },
+  })
+}
+
+/**
+ * Delete matter mutation
+ */
+export function useDeleteMatter() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (matterId) => mockUsptoService.deleteMatter(matterId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.matters })
+      queryClient.invalidateQueries({ queryKey: queryKeys.kpiSummary })
+      queryClient.invalidateQueries({ queryKey: ['deadlines'] })
+    },
+  })
+}

@@ -485,6 +485,63 @@ export const mockUsptoService = {
       }, 300)
     })
   },
+
+  /**
+   * Create a new matter
+   */
+  async createMatter(matterData) {
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        const newMatter = {
+          id: `matter-${Date.now()}`,
+          serial_num: matterData.serial_num,
+          reg_num: matterData.reg_num || null,
+          mark_text: matterData.mark_text,
+          client_id: matterData.client_id || null,
+          status_code: matterData.status_code || 200,
+          filing_date: matterData.filing_date || formatDate(today),
+          reg_date: matterData.reg_date || null,
+          filing_basis: matterData.filing_basis || '1(b)',
+          image_url: null,
+          goods_services: matterData.goods_services || '',
+          trademark_class: matterData.trademark_class || '',
+          attorney_notes: matterData.attorney_notes || null,
+        }
+        mockMatters.push(newMatter)
+        resolve({
+          ...newMatter,
+          client: mockClients.find(c => c.id === newMatter.client_id),
+          deadlines: [],
+          ttab_proceeding: null,
+        })
+      }, 300)
+    })
+  },
+
+  /**
+   * Delete a matter by ID
+   */
+  async deleteMatter(matterId) {
+    return new Promise((resolve, reject) => {
+      setTimeout(() => {
+        const index = mockMatters.findIndex(m => m.id === matterId)
+        if (index === -1) {
+          reject(new Error('Matter not found'))
+          return
+        }
+        // Remove associated deadlines
+        const deadlineIndexes = []
+        mockDeadlines.forEach((d, i) => {
+          if (d.matter_id === matterId) deadlineIndexes.unshift(i)
+        })
+        deadlineIndexes.forEach(i => mockDeadlines.splice(i, 1))
+
+        // Remove the matter
+        const deleted = mockMatters.splice(index, 1)[0]
+        resolve(deleted)
+      }, 200)
+    })
+  },
 }
 
 export default mockUsptoService

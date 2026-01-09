@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react'
 import { Link } from 'react-router-dom'
-import { ExternalLink, ChevronDown, ChevronUp, Filter } from 'lucide-react'
+import { ExternalLink, ChevronDown, ChevronUp, Filter, Trash2 } from 'lucide-react'
 import {
   Table,
   TableBody,
@@ -19,8 +19,17 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
 import { DeadlineIndicator } from './DeadlineHeatmap'
 import { getStatusInfo, getStatusCategory, FILING_BASIS } from '@/constants/statusCodes'
+import { useDeleteMatter } from '@/hooks/useMatters'
 import { cn } from '@/lib/utils'
 
 export function MattersTable({ matters, isLoading }) {
@@ -28,6 +37,18 @@ export function MattersTable({ matters, isLoading }) {
   const [sortDirection, setSortDirection] = useState('asc')
   const [filterStatus, setFilterStatus] = useState('all')
   const [searchTerm, setSearchTerm] = useState('')
+  const [deleteTarget, setDeleteTarget] = useState(null)
+  const deleteMatter = useDeleteMatter()
+
+  const handleDelete = async () => {
+    if (!deleteTarget) return
+    try {
+      await deleteMatter.mutateAsync(deleteTarget.id)
+      setDeleteTarget(null)
+    } catch (error) {
+      console.error('Failed to delete matter:', error)
+    }
+  }
 
   const sortedAndFilteredMatters = useMemo(() => {
     if (!matters) return []
@@ -280,16 +301,27 @@ export function MattersTable({ matters, isLoading }) {
                       )}
                     </TableCell>
                     <TableCell>
-                      <Button variant="ghost" size="icon" asChild>
-                        <a
-                          href={`https://tsdr.uspto.gov/#caseNumber=${matter.serial_num}&caseType=SERIAL_NO&searchType=statusSearch`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          title="View in TSDR"
+                      <div className="flex items-center gap-1">
+                        <Button variant="ghost" size="icon" asChild>
+                          <a
+                            href={`https://tsdr.uspto.gov/#caseNumber=${matter.serial_num}&caseType=SERIAL_NO&searchType=statusSearch`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            title="View in TSDR"
+                          >
+                            <ExternalLink className="h-4 w-4" />
+                          </a>
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => setDeleteTarget(matter)}
+                          title="Delete matter"
+                          className="text-muted-foreground hover:text-destructive"
                         >
-                          <ExternalLink className="h-4 w-4" />
-                        </a>
-                      </Button>
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
                     </TableCell>
                   </TableRow>
                 )
@@ -303,6 +335,30 @@ export function MattersTable({ matters, isLoading }) {
       <div className="text-sm text-muted-foreground">
         Showing {sortedAndFilteredMatters.length} of {matters?.length || 0} matters
       </div>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={!!deleteTarget} onOpenChange={() => setDeleteTarget(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete Matter</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete "{deleteTarget?.mark_text}"? This action cannot be undone and will also remove all associated deadlines.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDeleteTarget(null)}>
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleDelete}
+              disabled={deleteMatter.isPending}
+            >
+              {deleteMatter.isPending ? 'Deleting...' : 'Delete'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
