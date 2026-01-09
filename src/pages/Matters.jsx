@@ -1,14 +1,16 @@
 import { useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
-import { FileText, Plus } from 'lucide-react'
+import { FileText, Plus, Upload } from 'lucide-react'
 import { useMatters, useSearchMatters } from '@/hooks/useMatters'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { MattersTable } from '@/components/dashboard/MattersTable'
 import { AddMatterDialog } from '@/components/matter/AddMatterDialog'
+import { BatchImportDialog } from '@/components/matter/BatchImportDialog'
 
 export function Matters() {
   const [addDialogOpen, setAddDialogOpen] = useState(false)
+  const [batchDialogOpen, setBatchDialogOpen] = useState(false)
   const [searchParams] = useSearchParams()
   const searchQuery = searchParams.get('search') || ''
   const clientFilter = searchParams.get('client') || ''
@@ -37,10 +39,16 @@ export function Matters() {
               : 'View and manage all trademark matters'}
           </p>
         </div>
-        <Button onClick={() => setAddDialogOpen(true)}>
-          <Plus className="mr-2 h-4 w-4" />
-          Add Mark
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={() => setBatchDialogOpen(true)}>
+            <Upload className="mr-2 h-4 w-4" />
+            Batch Import
+          </Button>
+          <Button onClick={() => setAddDialogOpen(true)}>
+            <Plus className="mr-2 h-4 w-4" />
+            Add Mark
+          </Button>
+        </div>
       </div>
 
       {/* Matters Table */}
@@ -63,6 +71,9 @@ export function Matters() {
 
       {/* Add Matter Dialog */}
       <AddMatterDialog open={addDialogOpen} onOpenChange={setAddDialogOpen} />
+
+      {/* Batch Import Dialog */}
+      <BatchImportDialog open={batchDialogOpen} onOpenChange={setBatchDialogOpen} />
     </div>
   )
 }

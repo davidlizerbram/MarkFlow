@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Settings as SettingsIcon, Key, Database, Bell, User, Save } from 'lucide-react'
+import { Settings as SettingsIcon, Key, Database, Bell, User, Save, RefreshCw, Loader2 } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -10,11 +10,30 @@ import { Badge } from '@/components/ui/badge'
 export function Settings() {
   const [apiKey, setApiKey] = useState('')
   const [supabaseUrl, setSupabaseUrl] = useState('')
+  const [isSyncing, setIsSyncing] = useState(false)
+  const [lastSyncResult, setLastSyncResult] = useState(null)
+  const [syncSettings, setSyncSettings] = useState({
+    autoSync: false,
+    syncTime: '06:00',
+  })
   const [notifications, setNotifications] = useState({
     urgentDeadlines: true,
     weeklyDigest: true,
     ttabUpdates: true,
   })
+
+  const handleManualSync = async () => {
+    setIsSyncing(true)
+    try {
+      const response = await fetch('/api/sync-uspto')
+      const result = await response.json()
+      setLastSyncResult(result)
+    } catch (error) {
+      setLastSyncResult({ error: error.message })
+    } finally {
+      setIsSyncing(false)
+    }
+  }
 
   return (
     <div className="space-y-6">
@@ -85,6 +104,98 @@ export function Settings() {
               <Save className="mr-2 h-4 w-4" />
               Save Configuration
             </Button>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* USPTO Sync */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <RefreshCw className="h-5 w-5" />
+            USPTO Auto-Sync
+          </CardTitle>
+          <CardDescription>
+            Automatically sync trademark data from USPTO daily
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="font-medium">Enable Daily Sync</p>
+              <p className="text-sm text-muted-foreground">
+                Automatically refresh all marks from USPTO each day
+              </p>
+            </div>
+            <Switch
+              checked={syncSettings.autoSync}
+              onCheckedChange={(checked) =>
+                setSyncSettings({ ...syncSettings, autoSync: checked })
+              }
+            />
+          </div>
+
+          <Separator />
+
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="font-medium">Sync Time (UTC)</p>
+              <p className="text-sm text-muted-foreground">
+                When to run the daily sync
+              </p>
+            </div>
+            <Input
+              type="time"
+              value={syncSettings.syncTime}
+              onChange={(e) =>
+                setSyncSettings({ ...syncSettings, syncTime: e.target.value })
+              }
+              className="w-32"
+              disabled={!syncSettings.autoSync}
+            />
+          </div>
+
+          <Separator />
+
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="font-medium">Manual Sync</p>
+              <p className="text-sm text-muted-foreground">
+                Sync all marks from USPTO now
+              </p>
+            </div>
+            <Button
+              variant="outline"
+              onClick={handleManualSync}
+              disabled={isSyncing}
+            >
+              {isSyncing ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <RefreshCw className="mr-2 h-4 w-4" />
+              )}
+              {isSyncing ? 'Syncing...' : 'Sync Now'}
+            </Button>
+          </div>
+
+          {lastSyncResult && (
+            <div className="rounded-md bg-muted p-3 text-sm">
+              {lastSyncResult.error ? (
+                <p className="text-red-600">Error: {lastSyncResult.error}</p>
+              ) : (
+                <div className="space-y-1">
+                  <p className="text-muted-foreground">
+                    Last sync: {new Date(lastSyncResult.timestamp).toLocaleString()}
+                  </p>
+                  <p>{lastSyncResult.message}</p>
+                </div>
+              )}
+            </div>
+          )}
+
+          <div className="rounded-md bg-amber-50 border border-amber-200 p-3 text-sm text-amber-800">
+            <p className="font-medium">Note</p>
+            <p>Auto-sync requires Supabase to be connected for data persistence. Currently using mock data.</p>
           </div>
         </CardContent>
       </Card>
