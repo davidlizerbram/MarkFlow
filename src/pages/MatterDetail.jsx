@@ -74,6 +74,12 @@ export function MatterDetail() {
     ? calculateMaintenanceDeadlines(matter.reg_date)
     : null
 
+  // Calculate office action deadline if status indicates one is pending
+  const isOfficeActionPending = [600, 601, 602, 603, 610, 611, 612, 614, 615, 616].includes(matter.status_code)
+  const officeActionDeadline = isOfficeActionPending && matter.filing_date
+    ? calculateOfficeActionDeadline(matter.filing_date, matter.filing_basis)
+    : null
+
   return (
     <div className="space-y-6">
       {/* Back Button & Header */}
@@ -255,10 +261,43 @@ export function MatterDetail() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              {matter.deadlines?.length === 0 ? (
+              {matter.deadlines?.length === 0 && !officeActionDeadline ? (
                 <p className="text-muted-foreground">No active deadlines</p>
               ) : (
                 <div className="space-y-4">
+                  {/* Calculated Office Action deadline */}
+                  {officeActionDeadline && (
+                    <div className="flex items-center justify-between rounded-lg border p-4 border-orange-200 bg-orange-50">
+                      <div className="space-y-1">
+                        <p className="font-medium">
+                          Response to Office Action
+                        </p>
+                        <p className="text-sm text-muted-foreground">
+                          {officeActionDeadline.daysRemaining} days remaining
+                          {officeActionDeadline.isExtendable && ' (extension available)'}
+                        </p>
+                        {isMadrid && (
+                          <div className="flex items-center gap-1 text-xs text-purple-600">
+                            <AlertTriangle className="h-3 w-3" />
+                            Madrid Protocol - No extension available
+                          </div>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-4">
+                        <div className="text-right">
+                          <p className="font-medium">
+                            {format(officeActionDeadline.deadline, 'MMM d, yyyy')}
+                          </p>
+                          {officeActionDeadline.daysRemaining <= 30 && (
+                            <Badge variant={officeActionDeadline.daysRemaining <= 7 ? 'destructive' : 'warning'}>
+                              {officeActionDeadline.daysRemaining <= 7 ? 'Urgent' : 'Due Soon'}
+                            </Badge>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                  {/* Stored deadlines */}
                   {matter.deadlines?.map((deadline) => (
                     <div
                       key={deadline.id}
@@ -318,7 +357,7 @@ export function MatterDetail() {
                 </Button>
                 <Button variant="outline" asChild className="w-full justify-start">
                   <a
-                    href={`https://tsdr.uspto.gov/documentviewer?caseId=sn${matter.serial_num}&docId=ORC`}
+                    href={`https://tsdr.uspto.gov/#caseNumber=${matter.serial_num}&caseSearchType=US_APPLICATION&caseType=DEFAULT&searchType=documentSearch`}
                     target="_blank"
                     rel="noopener noreferrer"
                   >
