@@ -3,18 +3,20 @@ import { useNavigate } from 'react-router-dom'
 import { Search, Bell, Menu, Moon, Sun } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip'
+import { useUrgentDeadlines } from '@/hooks/useMatters'
 
 export function Header({ onMenuClick }) {
   const [searchQuery, setSearchQuery] = useState('')
   const [isDark, setIsDark] = useState(false)
   const navigate = useNavigate()
+  const { data: urgentDeadlines } = useUrgentDeadlines()
+  const deadlineCount = urgentDeadlines?.length || 0
 
   const handleSearch = (e) => {
     e.preventDefault()
@@ -85,29 +87,19 @@ export function Header({ onMenuClick }) {
                 onClick={() => navigate('/deadlines')}
               >
                 <Bell className="h-5 w-5" />
-                <span className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-destructive text-[10px] font-medium text-destructive-foreground flex items-center justify-center">
-                  3
-                </span>
+                {deadlineCount > 0 && (
+                  <span className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-destructive text-[10px] font-medium text-destructive-foreground flex items-center justify-center">
+                    {deadlineCount > 9 ? '9+' : deadlineCount}
+                  </span>
+                )}
                 <span className="sr-only">Notifications</span>
               </Button>
             </TooltipTrigger>
             <TooltipContent>
-              <p>View deadlines</p>
+              <p>{deadlineCount} deadline{deadlineCount !== 1 ? 's' : ''} in next 30 days</p>
             </TooltipContent>
           </Tooltip>
         </TooltipProvider>
-
-        {/* User avatar - links to settings */}
-        <Button
-          variant="ghost"
-          className="h-8 w-8 rounded-full p-0"
-          onClick={() => navigate('/settings')}
-        >
-          <Avatar className="h-8 w-8">
-            <AvatarImage src="" alt="User" />
-            <AvatarFallback>JD</AvatarFallback>
-          </Avatar>
-        </Button>
       </div>
     </header>
   )
