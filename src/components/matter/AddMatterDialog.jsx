@@ -26,6 +26,7 @@ const initialFormState = {
   mark_text: '',
   serial_num: '',
   reg_num: '',
+  owner_name: '',
   client_id: '',
   status_code: '220',
   filing_basis: '1(b)',
@@ -57,6 +58,7 @@ export function AddMatterDialog({ open, onOpenChange }) {
         mark_text: data.markText || prev.mark_text,
         serial_num: data.serialNumber || lookupSerial,
         reg_num: data.registrationNumber || '',
+        owner_name: data.ownerName || '',
         status_code: String(data.statusCodeNumeric || 220),
         filing_basis: mapUsptoFilingBasis(data.filingBasis) || prev.filing_basis,
         filing_date: formatDate(data.filingDate) || prev.filing_date,
@@ -195,15 +197,26 @@ export function AddMatterDialog({ open, onOpenChange }) {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="client_id">Client</Label>
+              <Label htmlFor="owner_name">Owner</Label>
+              <Input
+                id="owner_name"
+                value={formData.owner_name}
+                onChange={(e) => handleChange('owner_name', e.target.value)}
+                placeholder="Auto-filled from USPTO lookup"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="client_id">Associate with Client</Label>
               <Select
                 value={formData.client_id}
                 onValueChange={(value) => handleChange('client_id', value)}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Select a client" />
+                  <SelectValue placeholder="Optional - select a client" />
                 </SelectTrigger>
                 <SelectContent>
+                  <SelectItem value="">None</SelectItem>
                   {clients?.map((client) => (
                     <SelectItem key={client.id} value={client.id}>
                       {client.name}

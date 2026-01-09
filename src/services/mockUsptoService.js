@@ -497,6 +497,7 @@ export const mockUsptoService = {
           serial_num: matterData.serial_num,
           reg_num: matterData.reg_num || null,
           mark_text: matterData.mark_text,
+          owner_name: matterData.owner_name || null,
           client_id: matterData.client_id || null,
           status_code: matterData.status_code || 200,
           filing_date: matterData.filing_date || formatDate(today),

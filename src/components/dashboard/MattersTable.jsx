@@ -277,7 +277,9 @@ export function MattersTable({ matters, isLoading }) {
                       </div>
                     </TableCell>
                     <TableCell>
-                      <span className="text-sm">{matter.client?.name}</span>
+                      <span className="text-sm">
+                        {matter.client?.name || matter.owner_name || '—'}
+                      </span>
                     </TableCell>
                     <TableCell>
                       <Badge
