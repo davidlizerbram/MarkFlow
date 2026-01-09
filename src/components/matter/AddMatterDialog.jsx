@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { Search, Loader2 } from 'lucide-react'
 import {
   Dialog,
   DialogContent,
@@ -19,6 +20,7 @@ import {
 } from '@/components/ui/select'
 import { useClients, useCreateMatter } from '@/hooks/useMatters'
 import { FILING_BASIS, STATUS_CODES } from '@/constants/statusCodes'
+import { usptoService } from '@/services/usptoService'
 
 const initialFormState = {
   mark_text: '',
@@ -34,8 +36,60 @@ const initialFormState = {
 
 export function AddMatterDialog({ open, onOpenChange }) {
   const [formData, setFormData] = useState(initialFormState)
+  const [lookupSerial, setLookupSerial] = useState('')
+  const [isLookingUp, setIsLookingUp] = useState(false)
+  const [lookupError, setLookupError] = useState(null)
   const { data: clients } = useClients()
   const createMatter = useCreateMatter()
+
+  const handleLookup = async () => {
+    if (!lookupSerial.trim()) return
+
+    setIsLookingUp(true)
+    setLookupError(null)
+
+    try {
+      const data = await usptoService.fetchTrademarkBySerial(lookupSerial.trim())
+
+      // Auto-fill form with USPTO data
+      setFormData((prev) => ({
+        ...prev,
+        mark_text: data.markText || prev.mark_text,
+        serial_num: data.serialNumber || lookupSerial,
+        reg_num: data.registrationNumber || '',
+        status_code: String(data.statusCodeNumeric || 220),
+        filing_basis: mapUsptoFilingBasis(data.filingBasis) || prev.filing_basis,
+        filing_date: formatDate(data.filingDate) || prev.filing_date,
+        trademark_class: data.trademarkClass || '',
+        goods_services: data.goodsServices || '',
+      }))
+    } catch (error) {
+      setLookupError(error.message || 'Failed to lookup trademark')
+    } finally {
+      setIsLookingUp(false)
+    }
+  }
+
+  // Helper to map USPTO filing basis to our format
+  function mapUsptoFilingBasis(basis) {
+    if (!basis) return null
+    const basisLower = basis.toLowerCase()
+    if (basisLower.includes('1(a)') || basisLower.includes('use in commerce')) return '1(a)'
+    if (basisLower.includes('1(b)') || basisLower.includes('intent')) return '1(b)'
+    if (basisLower.includes('44(d)')) return '44(d)'
+    if (basisLower.includes('44(e)')) return '44(e)'
+    if (basisLower.includes('66(a)') || basisLower.includes('madrid')) return '66(a)'
+    return null
+  }
+
+  // Helper to format date from USPTO
+  function formatDate(dateStr) {
+    if (!dateStr) return null
+    // Handle various date formats
+    const date = new Date(dateStr)
+    if (isNaN(date.getTime())) return null
+    return date.toISOString().split('T')[0]
+  }
 
   const handleChange = (field, value) => {
     setFormData((prev) => ({ ...prev, [field]: value }))
@@ -58,6 +112,8 @@ export function AddMatterDialog({ open, onOpenChange }) {
 
   const handleClose = () => {
     setFormData(initialFormState)
+    setLookupSerial('')
+    setLookupError(null)
     onOpenChange(false)
   }
 
@@ -70,9 +126,39 @@ export function AddMatterDialog({ open, onOpenChange }) {
         <DialogHeader>
           <DialogTitle>Add New Mark</DialogTitle>
           <DialogDescription>
-            Enter the details for the new trademark matter.
+            Enter a serial number to lookup from USPTO, or fill in the details manually.
           </DialogDescription>
         </DialogHeader>
+
+        {/* USPTO Lookup Section */}
+        <div className="rounded-lg border bg-muted/50 p-4 space-y-3">
+          <Label className="text-sm font-medium">Lookup from USPTO</Label>
+          <div className="flex gap-2">
+            <Input
+              value={lookupSerial}
+              onChange={(e) => setLookupSerial(e.target.value)}
+              placeholder="Enter serial number (e.g., 97123456)"
+              className="flex-1"
+              onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), handleLookup())}
+            />
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={handleLookup}
+              disabled={isLookingUp || !lookupSerial.trim()}
+            >
+              {isLookingUp ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Search className="h-4 w-4" />
+              )}
+              <span className="ml-2">{isLookingUp ? 'Looking up...' : 'Lookup'}</span>
+            </Button>
+          </div>
+          {lookupError && (
+            <p className="text-sm text-destructive">{lookupError}</p>
+          )}
+        </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
